@@ -168,6 +168,9 @@ Things that behave differently once deployed:
   repeating.
 - **A cold start takes ~30 s**, because the free instance sleeps after 15 minutes of
   inactivity and the catalogue re-seeds itself on the way up.
+- **512 MB is enough, but not by much.** With CLIP loaded the process settles around
+  340 MB, which is why the container caps the Java heap at 65% of the limit. Drop the
+  CLIP files from the image to fall back to MobileNetV2 if you ever need it smaller.
 - **`CLIENT_ORIGIN` is only for split deployments.** With the app and the API on one
   origin, CORS never comes into play.
 

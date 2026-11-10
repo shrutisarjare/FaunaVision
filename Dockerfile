@@ -56,5 +56,6 @@ RUN mkdir -p /app/data
 ENV PORT=8080
 EXPOSE 8080
 
-# 75% leaves room for the ONNX session outside the Java heap.
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "app.jar"]
+# The process settles around 340 MB with CLIP loaded, so a 512 MB instance needs the
+# heap capped well below the default; the ONNX session is allocated off-heap.
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=65", "-jar", "app.jar"]
