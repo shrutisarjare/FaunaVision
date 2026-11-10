@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { apiUrl } from "../api";
 
 const AnimalList = () => {
   
@@ -33,7 +34,7 @@ const animal = params.animal;
 
         // 🔥 DETECTION FLOW (FIXED)
         if (!region) {
-          url = `http://localhost:8000/search/${cleanAnimal}`;
+          url = apiUrl(`/search/${cleanAnimal}`);
         }
 
         // 🟢 NAVIGATION FLOW (UNCHANGED)
@@ -47,7 +48,7 @@ const animal = params.animal;
 
           const formattedState = encodeURIComponent(state.toLowerCase());
 
-          url = `http://localhost:8000/animal/${region}/${category}/${formattedState}/${cleanAnimal}`;
+          url = apiUrl(`/api/animal/${region}/${category}/${formattedState}/${cleanAnimal}`);
         }
 
         console.log("🚀 CALLING:", url);

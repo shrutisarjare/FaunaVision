@@ -1,4 +1,5 @@
-import { Routes, Route } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { currentUser } from "./api";
 
 import Navbar from "./component/navbar";
 import Hero from "./component/hero";
@@ -52,6 +53,24 @@ const Home = () => {
   );
 };
 
+/* =======================
+   ROUTE GUARDS
+======================= */
+
+/** Sends anonymous visitors to the login page, remembering where they were headed. */
+const RequireAuth = ({ children, admin = false }) => {
+  const user = currentUser();
+  const location = useLocation();
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
+  // A normal account has no business on the admin dashboard, so send it home.
+  if (admin && user.role !== "admin") {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
 
 /* =======================
    APP ROUTES
@@ -101,16 +120,24 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      <Route path="/AdminDashboard" element={<AdminDashboard />} />
- 
+      <Route
+        path="/AdminDashboard"
+        element={
+          <RequireAuth admin>
+            <AdminDashboard />
+          </RequireAuth>
+        }
+      />
 
-      {/* ✅ ADD HERE (ONLY THIS PART NEW) */}
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/edit-profile" element={<EditProfile />} />
-      <Route path="/history" element={<History />} />
-      <Route path="/favourites" element={<Favourites />} />
+      {/* Pages that only make sense for a signed-in account */}
+      <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+      <Route path="/edit-profile" element={<RequireAuth><EditProfile /></RequireAuth>} />
+      <Route path="/history" element={<RequireAuth><History /></RequireAuth>} />
+      <Route path="/favourites" element={<RequireAuth><Favourites /></RequireAuth>} />
+      <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
+
+      {/* Quiz stays open to visitors */}
       <Route path="/quiz" element={<Quiz />} />
-      <Route path="/settings" element={<Settings />} />
 
     </Routes>
   );

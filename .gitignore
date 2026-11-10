@@ -2,12 +2,11 @@
 # Node
 # -------------------------------
 node_modules/
-
-# Logs
 npm-debug.log*
 yarn-debug.log*
+yarn-error.log*
 
-# Build folders
+# Build output
 dist/
 build/
 
@@ -18,32 +17,66 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.egg-info/
+.pytest_cache/
 
 # Virtual environments
 venv/
 yamnet_env/
-ml-service/venv/
 
 # -------------------------------
 # Environment variables
 # -------------------------------
 .env
+!.env.example
 
 # -------------------------------
-# Database / cache
+# Runtime artifacts
 # -------------------------------
+temp_audio.wav
+temp_video.mp4
+temp/
+uploads/
+image_cache.json
+~$*
 *.db
 *.sqlite3
-image_cache.json
 
 # -------------------------------
-# Data files (optional)
+# Data files
 # -------------------------------
 *.csv
 
 # -------------------------------
+# Legacy Python/Node implementation (reference only)
+# -------------------------------
+backend-python-legacy/
+
+# -------------------------------
+# Java / Maven
+# -------------------------------
+target/
+*.class
+
+# React build copied in by the Dockerfile / local packaging check
+backend/src/main/resources/static/
+
+# Runtime state
+backend/data/
+backend/models/
+*.log
+boot.log
+
+# Leftovers of the Express/FastAPI entry points, superseded by the Spring app
+backend/server.js
+backend/main.py
+backend/package.json
+backend/requirements.txt
+
+# -------------------------------
 # OS / Editor
 # -------------------------------
+.idea/
 .DS_Store
 Thumbs.db
 .vscode/

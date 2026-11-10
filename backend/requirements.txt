@@ -1,9 +1,0 @@
-fastapi
-uvicorn
-pymongo
-python-dotenv
-python-multipart
-numpy
-pillow
-opencv-python
-scikit-learn

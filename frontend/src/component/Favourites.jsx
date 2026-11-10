@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../api";
 
 const Favourites = () => {
   const [favs, setFavs] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/favourites")
+    fetch(apiUrl("/api/favourites"))
       .then(res => res.json())
       .then(setFavs);
   }, []);

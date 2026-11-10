@@ -1,49 +1,57 @@
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { Home } from "lucide-react";
 import { useState } from "react";
-import axios from "axios";
+import { apiUrl, currentUser, errorMessage, saveSession } from "../api";
 
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [email, setEmail] = useState("");
+  // A freshly registered account arrives with the form already filled in.
+  const [email, setEmail] = useState(location.state?.email || "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const [role, setRole] = useState("user");
+  const [role, setRole] = useState(location.state?.role || "user");
+  const justRegistered = Boolean(location.state?.registered);
+
+  // Someone who is already signed in has no reason to see this form again.
+  const signedIn = currentUser();
+  if (signedIn) {
+    return <Navigate to={signedIn.role === "admin" ? "/AdminDashboard" : "/"} replace />;
+  }
 
   const handleLogin = async () => {
     setError("");
+    setLoading(true);
 
     try {
-      const res = await axios.post(
-        "http://localhost:5001/api/auth/login",
-        { email, password }
-      );
+      const response = await fetch(apiUrl("/api/auth/login"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // The role is sent so the API can refuse an admin login to a normal account.
+        body: JSON.stringify({ email: email.trim(), password, role }),
+      });
 
-      // ✅ Save user info
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-
-      // ✅ Redirect to home
-     const user = res.data.user;
-
-// 👑 Admin → go to dashboard
-if (user.role === "admin") {
-  navigate("/AdminDashboard");
-} else {
-  // 👤 User → go back to previous page OR home
-  const redirectPath = location.state?.from || "/";
-  navigate(redirectPath);
-}
-
-    } catch (err) {
-      if (err.response?.data?.message === "User not found. Please register first.") {
-        setError("No account found. Please register first.");
-      } else {
-        setError(err.response?.data?.message || "Login failed");
+      if (!response.ok) {
+        setError(await errorMessage(response, "Login failed"));
+        return;
       }
+
+      const data = await response.json();
+      saveSession(data);
+
+      // Go back to the page the guard interrupted, otherwise home or the admin panel.
+      const destination =
+        data.user?.role === "admin"
+          ? location.state?.from || "/AdminDashboard"
+          : location.state?.from || "/";
+      navigate(destination, { replace: true });
+    } catch {
+      setError("Cannot reach the server. Is the backend running?");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -63,6 +71,12 @@ if (user.role === "admin") {
         <p className="text-center text-gray-500 mb-4">
           Login to continue
         </p>
+
+        {justRegistered && !error && (
+          <p className="text-green-800 bg-green-50 border border-green-200 rounded-lg text-center px-3 py-2 mb-3">
+            Account created. Please login to continue.
+          </p>
+        )}
 
         {error && (
           <p className="text-red-600 text-center mb-3 font-medium">
@@ -84,22 +98,26 @@ if (user.role === "admin") {
           className="w-full p-3 mb-6 border rounded-lg"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !loading) handleLogin();
+          }}
         />
         <select
-  className="w-full p-3 mb-6 border rounded-lg"
-  value={role}
-  onChange={(e) => setRole(e.target.value)}
->
-  <option value="user">User</option>
-  <option value="admin">Admin</option>
-</select>
+          className="w-full p-3 mb-6 border rounded-lg"
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+        >
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
 
         <button
           type="button"
           onClick={handleLogin}
-          className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg text-lg transition"
+          disabled={loading}
+          className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg text-lg transition disabled:opacity-60"
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
 
         <p className="text-center mt-4 text-gray-600">

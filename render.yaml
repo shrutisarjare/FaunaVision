@@ -1,0 +1,25 @@
+# Render blueprint. In the Render dashboard: New > Blueprint, pick the FaunaVision repo,
+# and Render builds this Dockerfile and serves the React app + API on one URL.
+services:
+  - type: web
+    name: faunavision
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      # Signing key for the session tokens; generated once and kept by Render.
+      - key: JWT_SECRET
+        generateValue: true
+      # Same-origin serving needs no CORS entry. Only set CLIENT_ORIGIN if the React app
+      # is ever hosted somewhere else.
+      #
+      # Free instances have no persistent disk, so app_user and contact_message are
+      # recreated after every deploy or restart. On a paid plan add a disk:
+      #   disk:
+      #     name: data
+      #     mountPath: /var/data
+      #     sizeGB: 1
+      # and set APP_DB_PATH=/var/data/speciesdb here.

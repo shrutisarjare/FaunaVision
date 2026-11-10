@@ -10,6 +10,7 @@ import {
 
 import { useParams, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { apiUrl } from "../api";
 
 const SpeciesPage = () => {
 
@@ -71,12 +72,12 @@ const SpeciesPage = () => {
 
       const animalName = detectionData.name || detectionData.species;
       
-      fetch(`http://127.0.0.1:8000/history?animal=${animalName}`, {
+      fetch(apiUrl(`/api/history?animal=${animalName}`), {
   method: "POST"
 });
 
       // main data
-      fetch(`http://127.0.0.1:8000/detection/${animalName}`)
+      fetch(apiUrl(`/detection/${animalName}`))
         .then(res => res.json())
         .then(result => {
 
@@ -90,7 +91,7 @@ const SpeciesPage = () => {
         });
 
       // 🔥 NEW: fetch locations
-      fetch(`http://127.0.0.1:8000/detection-locations/${animalName}/${regionType}`)
+      fetch(apiUrl(`/detection-locations/${animalName}/${regionType}`))
         .then(res => res.json())
         .then(result => {
           setLocations(result || []);
@@ -103,11 +104,11 @@ const SpeciesPage = () => {
     // 🔵 EXPLORE FLOW
     if (region && category && state && animal) {
       // ✅ SAVE HISTORY (explore flow)
-fetch(`http://127.0.0.1:8000/history?animal=${animal}&source=explore`, {
+fetch(apiUrl(`/api/history?animal=${animal}&source=explore`), {
   method: "POST"
 });
 
-      fetch(`http://127.0.0.1:8000/analysis/${region}/${category}/${state}/${animal}`)
+      fetch(apiUrl(`/analysis/${region}/${category}/${state}/${animal}`))
         .then(res => res.json())
         .then(result => {
 
@@ -132,7 +133,7 @@ fetch(`http://127.0.0.1:8000/history?animal=${animal}&source=explore`, {
 
     const animalName = detectionData.name || detectionData.species;
 
-    fetch(`http://127.0.0.1:8000/detection/${animalName}/${regionType}/${value}`)
+    fetch(apiUrl(`/detection/${animalName}/${regionType}/${value}`))
       .then(res => res.json())
       .then(result => {
 
@@ -157,14 +158,14 @@ fetch(`http://127.0.0.1:8000/history?animal=${animal}&source=explore`, {
     const animalName = detectionData.name || detectionData.species;
 
     // 🔥 fetch new locations
-    fetch(`http://127.0.0.1:8000/detection-locations/${animalName}/${value}`)
+    fetch(apiUrl(`/detection-locations/${animalName}/${value}`))
       .then(res => res.json())
       .then(result => {
         setLocations(result || []);
       });
 
     // reload base data
-    fetch(`http://127.0.0.1:8000/detection/${animalName}`)
+    fetch(apiUrl(`/detection/${animalName}`))
       .then(res => res.json())
       .then(result => {
 
@@ -228,7 +229,7 @@ fetch(`http://127.0.0.1:8000/history?animal=${animal}&source=explore`, {
   onClick={() => {
     const animalName = data?.species; // ✅ correct field
 
-    fetch(`http://127.0.0.1:8000/favourites?animal=${animalName}`, {
+    fetch(apiUrl(`/api/favourites?animal=${animalName}`), {
       method: "POST"
     })
       .then(res => res.json())

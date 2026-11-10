@@ -1,6 +1,7 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Home } from "lucide-react";
 import { useState } from "react";
+import { apiUrl, currentUser, errorMessage } from "../api";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -10,53 +11,65 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("user");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // An existing session would be replaced by the new account, so hide the form instead.
+  const signedIn = currentUser();
+  if (signedIn) {
+    return <Navigate to={signedIn.role === "admin" ? "/AdminDashboard" : "/"} replace />;
+  }
 
   const handleRegister = async () => {
+    setError("");
+
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedName || !trimmedEmail || !password) {
+      setError("All fields are required");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setError("Invalid email format");
+      return;
+    }
+
+    // Kept in step with the API, which rejects anything shorter.
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      setError("");
-
-      // 🔥 Trim values
-      const trimmedName = name.trim();
-      const trimmedEmail = email.trim();
-      const trimmedPassword = password.trim();
-
-      // 🔥 Required validation
-      if (!trimmedName || !trimmedEmail || !trimmedPassword) {
-        setError("All fields are required");
-        return;
-      }
-
-      // 🔥 Email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(trimmedEmail)) {
-        setError("Invalid email format");
-        return;
-      }
-
-      const res = await fetch("http://localhost:5001/api/auth/register", {
+      const response = await fetch(apiUrl("/api/auth/register"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        // The password is sent verbatim: trimming it here would silently change it.
         body: JSON.stringify({
           name: trimmedName,
           email: trimmedEmail,
-          password: trimmedPassword,
+          password,
           role,
         }),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Registration failed");
+      if (!response.ok) {
+        setError(await errorMessage(response, "Registration failed"));
+        return;
       }
 
-      alert("Registration successful!");
-      navigate("/login");
-
-    } catch (err) {
-      setError(err.message);
+      // Registering only creates the account; the user signs in on the next screen.
+      navigate("/login", { state: { registered: true, email: trimmedEmail, role } });
+    } catch {
+      setError("Cannot reach the server. Is the backend running?");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -114,9 +127,10 @@ export default function Register() {
 
         <button
           onClick={handleRegister}
-          className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg"
+          disabled={loading}
+          className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg disabled:opacity-60"
         >
-          Register
+          {loading ? "Creating account..." : "Register"}
         </button>
 
         <p className="text-center mt-4 text-gray-600">

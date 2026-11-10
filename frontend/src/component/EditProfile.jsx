@@ -1,71 +1,70 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User } from "lucide-react";
+import { apiUrl, authHeaders, clearSession, currentUser, errorMessage, saveSession } from "../api";
 
 const EditProfile = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = currentUser();
   const navigate = useNavigate();
 
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+
+    setError("");
+
+    if (!trimmedName || !trimmedEmail) {
+      setError("Name and email are required");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setError("Invalid email format");
+      return;
+    }
+
+    if (!user) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      // 🔴 Check user
-      if (!user) {
-        alert("Please login again");
-        navigate("/login");
+      const response = await fetch(apiUrl("/update-profile"), {
+        method: "PUT",
+        headers: authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          _id: user._id || user.id,
+          name: trimmedName,
+          email: trimmedEmail,
+        }),
+      });
+
+      if (response.status === 401) {
+        clearSession();
+        navigate("/login", { replace: true });
         return;
       }
-
-      // ✅ FIX: support both id and _id
-      const userId = user._id || user.id;
-
-      if (!userId) {
-        alert("Session expired. Please login again.");
-        navigate("/login");
-        return;
-      }
-
-      setLoading(true);
-
-      const response = await fetch(
-        "http://127.0.0.1:8000/update-profile",
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            _id: userId,
-            name,
-            email,
-          }),
-        }
-      );
-
-      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Update failed");
+        setError(await errorMessage(response, "Update failed"));
+        return;
       }
 
-      // ✅ Update localStorage
-      const updatedUser = {
-        ...user,
-        name,
-        email,
-      };
-
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-
-      alert("Profile updated successfully!");
+      // Store what the API accepted, so the navbar and profile page agree with it.
+      saveSession({
+        user: { ...user, name: trimmedName, email: trimmedEmail.toLowerCase() },
+      });
       navigate("/profile");
-
-    } catch (err) {
-      console.error("Update error:", err);
-      alert(err.message || "Update failed");
+    } catch {
+      setError("Cannot reach the server. Is the backend running?");
     } finally {
       setLoading(false);
     }
@@ -92,6 +91,12 @@ const EditProfile = () => {
 
         {/* Title */}
         <h1 className="text-2xl font-bold mb-6">Edit Profile</h1>
+
+        {error && (
+          <p className="text-red-300 font-medium mb-4">
+            {error}
+          </p>
+        )}
 
         {/* Name */}
         <input

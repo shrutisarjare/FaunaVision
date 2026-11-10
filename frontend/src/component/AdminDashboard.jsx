@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { API_URL, clearSession, currentUser } from "../api";
 
-const BASE_URL = "http://127.0.0.1:8000";
+const BASE_URL = API_URL;
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("view");
@@ -29,10 +30,10 @@ const AdminDashboard = () => {
     status: "",
   });
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = currentUser();
 
   const handleLogout = () => {
-    localStorage.clear();
+    clearSession();
     window.location.href = "/login";
   };
 
@@ -129,7 +130,7 @@ const AdminDashboard = () => {
 
         <button
           onClick={handleLogout}
-          className="mt-auto bg-red-500 py-2 rounded hover:bg-red-600"
+          className="bg-red-500 py-2 rounded hover:bg-red-600"
         >
           Logout
         </button>

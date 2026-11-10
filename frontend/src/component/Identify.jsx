@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { UploadCloud, Mic, Video, Music, Sparkles, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../api";
 
 const Identify = () => {
 
@@ -117,7 +118,7 @@ const Identify = () => {
       if (description.trim() !== "") {
 
         const response = await fetch(
-          "http://127.0.0.1:8000/identify-text",
+          apiUrl("/identify-text"),
           {
             method: "POST",
             headers: {
@@ -130,7 +131,7 @@ const Identify = () => {
         );
 
         const data = await response.json();
-        setResult(data.species);
+        setResult(data);
       }
 
       // IMAGE INPUT
@@ -140,7 +141,7 @@ const Identify = () => {
         formData.append("file", imageFile);
 
         const response = await fetch(
-          "http://127.0.0.1:8000/identify-image",
+          apiUrl("/identify-image"),
           {
             method: "POST",
             body: formData
@@ -148,11 +149,7 @@ const Identify = () => {
         );
 
         const data = await response.json();
-
-        setResult(data.species);
-
-        // AUTO NAVIGATION
-        navigate(`/detect/${data.species.toLowerCase()}`);
+        setResult(data);
       }
 
       // VIDEO INPUT ✅ UPDATED
@@ -162,7 +159,7 @@ const Identify = () => {
         formData.append("file", videoFile);
 
         const response = await fetch(
-          "http://127.0.0.1:8000/identify-video",
+          apiUrl("/identify-video"),
           {
             method: "POST",
             body: formData
@@ -170,11 +167,7 @@ const Identify = () => {
         );
 
         const data = await response.json();
-
-        setResult(data.species);
-
-        // 🔥 ADDED (same as image)
-        navigate(`/detect/${data.species.toLowerCase()}`);
+        setResult(data);
       }
 
       // AUDIO INPUT
@@ -184,7 +177,7 @@ const Identify = () => {
         formData.append("file", audioFile);
 
         const response = await fetch(
-          "http://127.0.0.1:8000/identify-audio",
+          apiUrl("/identify-audio"),
           {
             method: "POST",
             body: formData
@@ -192,7 +185,7 @@ const Identify = () => {
         );
 
         const data = await response.json();
-        setResult(data.species);
+        setResult(data);
       }
 
     } catch {
@@ -273,18 +266,63 @@ const Identify = () => {
         )}
 
         {result && (
-          <div className="mt-4 p-3 bg-green-50 border border-green-300 rounded-lg">
+          <div className="mt-4 p-3 bg-green-50 border border-green-300 rounded-lg text-left">
 
-            🐾 Detected: <b>{result}</b>
+            <p className="text-green-900">
+              🐾 Detected: <b>{result.species}</b>
+            </p>
 
-            <div className="mt-3">
-              <button
-               onClick={() => navigate(`/detect/${result.toLowerCase()}`)}
-                className="bg-green-700 text-white px-3 py-1 rounded"
-              >
-                View About
-              </button>
-            </div>
+            {/* The model explains itself when the evidence cannot name one species. */}
+            {result.evidence && (
+              <p className="mt-1 text-xs italic text-green-700">{result.evidence}</p>
+            )}
+
+            {result.matches?.length > 0 && (
+              <ul className="mt-3 space-y-2">
+                {result.matches.map((match, index) => (
+                  <li key={match.name}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(`/detect/${encodeURIComponent(match.name.toLowerCase())}`)
+                      }
+                      className="w-full text-left"
+                    >
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className={index === 0 ? "font-semibold text-green-800" : "text-green-900"}>
+                          {match.name}
+                        </span>
+                        <span className="text-xs text-green-700">
+                          {(match.confidence * 100).toFixed(1)}%
+                        </span>
+                      </div>
+
+                      <div className="mt-1 h-1.5 w-full rounded bg-green-200">
+                        <div
+                          className={`h-1.5 rounded ${index === 0 ? "bg-green-700" : "bg-green-500"}`}
+                          style={{ width: `${Math.max(2, match.confidence * 100)}%` }}
+                        />
+                      </div>
+
+                      {match.scientific_name && (
+                        <p className="text-[11px] italic text-green-700">{match.scientific_name}</p>
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {result.species && result.species !== "unknown" && (
+              <div className="mt-3">
+                <button
+                  onClick={() => navigate(`/detect/${encodeURIComponent(result.species.toLowerCase())}`)}
+                  className="bg-green-700 text-white px-3 py-1 rounded"
+                >
+                  View About
+                </button>
+              </div>
+            )}
 
           </div>
         )}

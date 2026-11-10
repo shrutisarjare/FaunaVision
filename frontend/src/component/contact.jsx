@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { apiUrl } from "../api";
 
 const Contact = () => {
   const [name, setName] = useState("");
@@ -12,7 +13,7 @@ const Contact = () => {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:5001/api/contact", {
+      const res = await fetch(apiUrl("/api/contact"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

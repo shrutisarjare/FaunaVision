@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { apiUrl } from "../api";
 
 const History = () => {
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/history")
+    fetch(apiUrl("/api/history"))
       .then(res => res.json())
       .then(data => setHistory(data))
       .catch(err => console.error("Error fetching history:", err));

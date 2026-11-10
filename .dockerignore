@@ -1,0 +1,32 @@
+# Keep the build context small: only what the Dockerfile copies is needed.
+.git
+.gitignore
+.idea
+.vscode
+
+# Installations and build output
+**/node_modules
+frontend/dist
+backend/target
+**/__pycache__
+venv
+yamnet_env
+
+# Local API override (points at localhost) — the image serves the API itself
+frontend/.env
+frontend/.env.local
+backend/.env
+
+# Local runtime state and downloaded models (fetched inside the image)
+backend/models
+backend/data
+backend/*.log
+backend/boot.log
+*.db
+*.mv.db
+
+# Legacy Python / notebook material
+ml
+ml-service
+data
+**/*.py

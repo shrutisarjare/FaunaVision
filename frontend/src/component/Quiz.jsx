@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { apiUrl } from "../api";
 
 const Quiz = () => {
   const [questions, setQuestions] = useState([]);
@@ -6,7 +7,7 @@ const Quiz = () => {
   const [score, setScore] = useState(0);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/quiz")
+    fetch(apiUrl("/api/quiz"))
       .then(res => res.json())
       .then(setQuestions);
   }, []);

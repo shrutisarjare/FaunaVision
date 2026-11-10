@@ -8,17 +8,18 @@ import {
   Brain,
   Settings,
   LogOut,
-  Menu
+  Menu,
+  ShieldCheck
 } from "lucide-react";
+import { clearSession, currentUser } from "../api";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = currentUser();
   const [open, setOpen] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+    clearSession();
     setOpen(false);
     navigate("/login");
   };
@@ -92,7 +93,10 @@ const Navbar = () => {
 
               {[
                 { name: "Profile", icon: User, path: "/profile" },
-              
+                // Only an administrator has anything to do in the admin panel.
+                ...(user.role === "admin"
+                  ? [{ name: "Admin Panel", icon: ShieldCheck, path: "/AdminDashboard" }]
+                  : []),
                 { name: "History", icon: History, path: "/history" },
                 { name: "Favourites", icon: Heart, path: "/favourites" },
                 { name: "Quiz", icon: Brain, path: "/quiz" },

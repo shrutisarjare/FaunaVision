@@ -1,9 +1,28 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User } from "lucide-react";
+import { currentUser, refreshSession } from "../api";
 
 const Profile = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
   const navigate = useNavigate();
+  // Seeded from storage so the page paints immediately, then corrected by the API.
+  const [user, setUser] = useState(currentUser);
+
+  useEffect(() => {
+    let active = true;
+    refreshSession().then((fresh) => {
+      if (!active) return;
+      if (fresh) {
+        setUser(fresh);
+        return;
+      }
+      // refreshSession only returns null after dropping a rejected token.
+      navigate("/login", { replace: true });
+    });
+    return () => {
+      active = false;
+    };
+  }, [navigate]);
 
   return (
     <div className="relative min-h-screen text-white">
@@ -43,6 +62,11 @@ const Profile = () => {
             <p className="text-lg">
               <span className="text-gray-300">Email:</span>{" "}
               <span className="font-semibold">{user?.email}</span>
+            </p>
+
+            <p className="text-lg">
+              <span className="text-gray-300">Account:</span>{" "}
+              <span className="font-semibold capitalize">{user?.role || "user"}</span>
             </p>
           </div>
 
